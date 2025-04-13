@@ -295,3 +295,160 @@ FROM customer c
 JOIN cust_order co ON c.customer_id = co.customer_id
 JOIN order_line ol ON co.order_id = ol.order_id
 GROUP BY c.customer_id;
+
+SELECT 
+    bl.language_name,
+    p.name as publisher_name,
+    COUNT(DISTINCT b.book_id) as number_of_books,
+    SUM(ol.quantity) as total_copies_sold,
+    SUM(ol.quantity * ol.price_at_purchase) as total_revenue
+FROM book b
+JOIN book_language bl ON b.language_id = bl.language_id
+JOIN publisher p ON b.publisher_id = p.publisher_id
+LEFT JOIN order_line ol ON b.book_id = ol.book_id
+GROUP BY bl.language_id, bl.language_name, p.publisher_id, p.name
+ORDER BY total_revenue DESC;
+
+-- Example complex query: Customer address analysis with status
+SELECT 
+    c.first_name,
+    c.last_name,
+    COUNT(ca.address_id) as total_addresses,
+    GROUP_CONCAT(DISTINCT ast.status_name) as address_types,
+    GROUP_CONCAT(DISTINCT cnt.country_name) as countries
+FROM customer c
+JOIN customer_address ca ON c.customer_id = ca.customer_id
+JOIN address a ON ca.address_id = a.address_id
+JOIN address_status ast ON ca.status_id = ast.status_id
+JOIN country cnt ON a.country_id = cnt.country_id
+GROUP BY c.customer_id, c.first_name, c.last_name
+HAVING total_addresses > 1;
+
+-- Example complex query: Order fulfillment analysis
+SELECT 
+    YEAR(co.order_date) as order_year,
+    MONTH(co.order_date) as order_month,
+    COUNT(co.order_id) as total_orders,
+    AVG(DATEDIFF(
+        (SELECT MIN(update_time) 
+         FROM order_history oh2 
+         WHERE oh2.order_id = co.order_id 
+         AND oh2.status_id = (SELECT status_id FROM order_status WHERE status_name = 'Delivered')),
+        co.order_date
+    )) as avg_delivery_days
+FROM cust_order co
+GROUP BY order_year, order_month
+ORDER BY order_year, order_month;
+
+-- Example query for author table: Get all authors with their book count
+SELECT a.first_name, a.last_name, COUNT(ba.book_id) as number_of_books
+FROM author a
+LEFT JOIN book_author ba ON a.author_id = ba.author_id
+GROUP BY a.author_id, a.first_name, a.last_name;
+
+-- Example query for book_language table: Show number of books in each language
+SELECT bl.language_name, COUNT(b.book_id) as books_count
+FROM book_language bl
+LEFT JOIN book b ON bl.language_id = b.language_id
+GROUP BY bl.language_id, bl.language_name;
+
+-- Example query for publisher table: List publishers and their published books count
+SELECT p.name, p.contact_info, COUNT(b.book_id) as published_books
+FROM publisher p
+LEFT JOIN book b ON p.publisher_id = b.publisher_id
+GROUP BY p.publisher_id, p.name, p.contact_info;
+
+-- Example query for book table: Get books with price higher than average
+SELECT b.title, b.isbn, b.price
+FROM book b
+WHERE b.price > (SELECT AVG(price) FROM book)
+ORDER BY b.price DESC;
+
+-- Example query for country table: Show number of customers per country
+SELECT c.country_name, COUNT(DISTINCT ca.customer_id) as number_of_customers
+FROM country c
+LEFT JOIN address a ON c.country_id = a.country_id
+LEFT JOIN customer_address ca ON a.address_id = ca.address_id
+GROUP BY c.country_id, c.country_name;
+
+-- Example query for address table: Find customers with multiple addresses
+SELECT c.first_name, c.last_name, COUNT(ca.address_id) as number_of_addresses
+FROM customer c
+JOIN customer_address ca ON c.customer_id = ca.customer_id
+GROUP BY c.customer_id, c.first_name, c.last_name
+HAVING COUNT(ca.address_id) > 1;
+
+-- Example query for shipping_method table: Show most popular shipping methods
+SELECT sm.method_name, COUNT(co.order_id) as times_used
+FROM shipping_method sm
+LEFT JOIN cust_order co ON sm.shipping_id = co.shipping_id
+GROUP BY sm.shipping_id, sm.method_name
+ORDER BY times_used DESC;
+
+-- Example query for order_status table: Show order distribution by status
+SELECT os.status_name, COUNT(co.order_id) as number_of_orders
+FROM order_status os
+LEFT JOIN cust_order co ON os.status_id = co.status_id
+GROUP BY os.status_id, os.status_name;
+
+-- Example query for cust_order table: Get orders with their total items and amount
+SELECT co.order_id, 
+       c.first_name, 
+       c.last_name, 
+       SUM(ol.quantity) as total_items,
+       co.total_amount
+FROM cust_order co
+JOIN customer c ON co.customer_id = c.customer_id
+JOIN order_line ol ON co.order_id = ol.order_id
+GROUP BY co.order_id, c.first_name, c.last_name, co.total_amount;
+
+-- Example query for order_line table: Find best-selling books
+SELECT b.title, 
+       SUM(ol.quantity) as total_sold,
+       SUM(ol.quantity * ol.price_at_purchase) as total_revenue
+FROM order_line ol
+JOIN book b ON ol.book_id = b.book_id
+GROUP BY b.book_id, b.title
+ORDER BY total_sold DESC;
+
+-- Example query for order_history table: Track order status changes
+SELECT co.order_id, 
+       c.first_name, 
+       c.last_name,
+       os.status_name,
+       oh.update_time,
+       oh.notes
+FROM order_history oh
+JOIN cust_order co ON oh.order_id = co.order_id
+JOIN customer c ON co.customer_id = c.customer_id
+JOIN order_status os ON oh.status_id = os.status_id
+ORDER BY co.order_id, oh.update_time;
+
+-- Example complex query: Customer purchase analysis
+SELECT 
+    c.customer_id,
+    c.first_name,
+    c.last_name,
+    COUNT(DISTINCT co.order_id) as total_orders,
+    SUM(ol.quantity) as total_items_purchased,
+    SUM(ol.quantity * ol.price_at_purchase) as total_spent,
+    MAX(co.order_date) as last_order_date
+FROM customer c
+LEFT JOIN cust_order co ON c.customer_id = co.customer_id
+LEFT JOIN order_line ol ON co.order_id = ol.order_id
+GROUP BY c.customer_id, c.first_name, c.last_name
+ORDER BY total_spent DESC;
+
+-- Example complex query: Book sales performance by language and publisher
+SELECT 
+    bl.language_name,
+    p.name as publisher_name,
+    COUNT(DISTINCT b.book_id) as number_of_books,
+    SUM(ol.quantity) as total_copies_sold,
+    SUM(ol.quantity * ol.price_at_purchase) as total_revenue
+FROM book b
+JOIN book_language bl ON b.language_id = bl.language_id
+JOIN publisher p ON b.publisher_id = p.publisher_id
+LEFT JOIN order_line ol ON b.book_id = ol.book_id
+GROUP BY bl.language_id, bl.language_name, p.publisher_id, p.name
+ORDER BY total_revenue DESC;
