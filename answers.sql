@@ -1,6 +1,8 @@
+-- creating the database
 CREATE DATABASE BookStoreDB;
 USE BookStoreDB;
 
+-- table author
 CREATE TABLE author (
     author_id INT PRIMARY KEY AUTO_INCREMENT,
     first_name VARCHAR(50) NOT NULL,
@@ -9,11 +11,13 @@ CREATE TABLE author (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- book_language table
 CREATE TABLE book_language (
     language_id INT PRIMARY KEY AUTO_INCREMENT,
     language_name VARCHAR(50) NOT NULL UNIQUE
 );
 
+-- publisher table
 CREATE TABLE publisher (
     publisher_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL UNIQUE,
@@ -21,6 +25,7 @@ CREATE TABLE publisher (
     contact_info VARCHAR(100)
 );
 
+-- book table
 CREATE TABLE book (
     book_id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255) NOT NULL,
@@ -34,6 +39,7 @@ CREATE TABLE book (
     FOREIGN KEY (publisher_id) REFERENCES publisher(publisher_id)
 );
 
+-- book_author table
 CREATE TABLE book_author (
     book_id INT,
     author_id INT,
@@ -42,16 +48,19 @@ CREATE TABLE book_author (
     FOREIGN KEY (author_id) REFERENCES author(author_id)
 );
 
+-- country table
 CREATE TABLE country (
     country_id INT PRIMARY KEY AUTO_INCREMENT,
     country_name VARCHAR(100) NOT NULL UNIQUE
 );
 
+-- address_status table
 CREATE TABLE address_status (
     status_id INT PRIMARY KEY AUTO_INCREMENT,
     status_name VARCHAR(50) NOT NULL UNIQUE
 );
 
+-- address table
 CREATE TABLE address (
     address_id INT PRIMARY KEY AUTO_INCREMENT,
     street_address VARCHAR(255) NOT NULL,
@@ -62,6 +71,7 @@ CREATE TABLE address (
     FOREIGN KEY (country_id) REFERENCES country(country_id)
 );
 
+-- customer table
 CREATE TABLE customer (
     customer_id INT PRIMARY KEY AUTO_INCREMENT,
     first_name VARCHAR(50) NOT NULL,
@@ -71,6 +81,7 @@ CREATE TABLE customer (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- customer_address table
 CREATE TABLE customer_address (
     customer_id INT,
     address_id INT,
@@ -81,17 +92,20 @@ CREATE TABLE customer_address (
     FOREIGN KEY (status_id) REFERENCES address_status(status_id)
 );
 
+-- shipping_method table
 CREATE TABLE shipping_method (
     shipping_id INT PRIMARY KEY AUTO_INCREMENT,
     method_name VARCHAR(50) NOT NULL UNIQUE,
     cost DECIMAL(10, 2) NOT NULL
 );
 
+-- order_status table
 CREATE TABLE order_status (
     status_id INT PRIMARY KEY AUTO_INCREMENT,
     status_name VARCHAR(50) NOT NULL UNIQUE
 );
 
+-- cust_order table
 CREATE TABLE cust_order (
     order_id INT PRIMARY KEY AUTO_INCREMENT,
     customer_id INT NOT NULL,
@@ -104,6 +118,7 @@ CREATE TABLE cust_order (
     FOREIGN KEY (status_id) REFERENCES order_status(status_id)
 );
 
+-- order_line table
 CREATE TABLE order_line (
     order_id INT,
     book_id INT,
@@ -114,6 +129,7 @@ CREATE TABLE order_line (
     FOREIGN KEY (book_id) REFERENCES book(book_id)
 );
 
+-- order_history table
 CREATE TABLE order_history (
     history_id INT PRIMARY KEY AUTO_INCREMENT,
     order_id INT NOT NULL,
